@@ -8,4 +8,5 @@ public class Guard {
     public static <T extends Exception> void Requires(boolean condition, T ex) throws T {
         if(!condition) throw ex;
     }
+
 }
