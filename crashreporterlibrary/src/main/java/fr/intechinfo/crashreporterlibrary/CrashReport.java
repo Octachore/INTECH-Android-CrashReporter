@@ -3,7 +3,7 @@ package fr.intechinfo.crashreporterlibrary;
 import java.util.Date;
 
 /**
- * Created by Nicolas on 15/09/2016.
+ * Represents crash report.
  */
 public class CrashReport {
     private final int id;
@@ -33,5 +33,9 @@ public class CrashReport {
 
     public String getDate() {
         return date;
+    }
+
+    public String render() {
+        return String.format("%s : %s\n\n%s\n\n\n", date, message, stacktrace);
     }
 }

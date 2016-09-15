@@ -11,13 +11,14 @@ import android.net.Uri;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Handles crash reporting.
+ */
 public class CrashReporter {
 
     private static Application _application;
@@ -36,8 +37,6 @@ public class CrashReporter {
     public static void initialize(Application application) {
 
         _application = application;
-
-        // TODO: check if already registered default handler.
 
         SQLiteDatabase db = null;
         // Create a database to save the crash reports into
@@ -88,7 +87,7 @@ public class CrashReporter {
 
         db.execSQL(query);
 
-        sendExceptions("test@example.com");
+        sendExceptions("test@example.com"); // For the demo
     }
 
     /**
@@ -108,28 +107,22 @@ public class CrashReporter {
         SQLiteDatabase db = null;
         ArrayList<CrashReport> list = new ArrayList<>();
 
+        // Get the reports and add them to the list to return
         try {
             db = getDB();
-            cursor = db.rawQuery("SELECT id, message, stacktrace, date FROM CrashReports", new String[]{
-
-            });
+            cursor = db.rawQuery("SELECT id, message, stacktrace, date FROM CrashReports", new String[]{ });
 
             if (cursor.moveToFirst()) {
                 do {
                     int id = cursor.getInt(0);
                     String message = cursor.getString(1);
                     String stacktrace = cursor.getString(2);
-                    // DateFormat format = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL);
-                    // Date date = format.parse(cursor.getString(3));
                     String date = cursor.getString(3);
 
                     list.add(new CrashReport(id, message, stacktrace, date));
 
                 } while (cursor.moveToNext());
             }
-        }
-        catch (Exception e){
-            e.printStackTrace();
         }
         finally {
             if (cursor != null) {
@@ -142,10 +135,16 @@ public class CrashReporter {
         }
     }
 
+    /**
+     * Sends the crash report by email.
+     * @param email The email address.
+     */
     public static void sendExceptions(String email) {
 
+        // Get the reports
         ArrayList<CrashReport> reports = getExceptions();
 
+        // Create a file on external storage
         File fileDir = _application.getExternalFilesDir(null);
         File file = new File(fileDir, "crash-reports.log");
         PrintWriter writer = null;
@@ -155,7 +154,7 @@ public class CrashReporter {
             writer = new PrintWriter(file);
 
             for (CrashReport report : reports) {
-                writer.write(String.format("%s : %s\n%s\n\n", report.getDate(), report.getMessage(), report.getStacktrace()));
+                writer.write(report.render());
             }
 
         } catch (FileNotFoundException e) {
@@ -180,11 +179,11 @@ public class CrashReporter {
         } catch (ActivityNotFoundException e) {
             e.printStackTrace();
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
+    /**
+     * Deletes all crash logs in the database.
+     */
     public static void reset() {
 
         SQLiteDatabase db = null;
