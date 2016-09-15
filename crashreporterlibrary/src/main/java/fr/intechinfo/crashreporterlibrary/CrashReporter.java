@@ -31,7 +31,6 @@ public class CrashReporter {
 
     /**
      * Initializes the CrashReporter with the specified application. Starts to listen for crashes of the application.
-     *
      * @param application The application to watch.
      */
     public static void initialize(Application application) {
@@ -42,7 +41,16 @@ public class CrashReporter {
         // Create a database to save the crash reports into
         try {
             db = getDB();
-            db.execSQL("CREATE TABLE IF NOT EXISTS CrashReports(id INTEGER PRIMARY KEY AUTOINCREMENT, message TEXT, stacktrace TEXT, date TEXT)");
+            db.execSQL(
+                    String.format(
+                            "CREATE TABLE IF NOT EXISTS %s(%s INTEGER PRIMARY KEY AUTOINCREMENT, %s TEXT, %s TEXT, %s TEXT)",
+                            tableName,
+                            col_id,
+                            col_message,
+                            col_stacktrace,
+                            col_date
+                    )
+            );
         }
         catch (Exception e){
 
@@ -81,9 +89,14 @@ public class CrashReporter {
         SQLiteDatabase db = getDB();
 
         String query = String.format(
-                "INSERT INTO %s (%s, %S, %s) " +
-                        "VALUES ('%s', '%s', '%s')"
-                , tableName, col_message, col_stacktrace, col_date, e.getMessage(), Arrays.toString(e.getStackTrace()), date.toString());
+                "INSERT INTO %s (%s, %S, %s) VALUES ('%s', '%s', '%s')",
+                tableName,
+                col_message,
+                col_stacktrace,
+                col_date,
+                e.getMessage(),
+                Arrays.toString(e.getStackTrace()),
+                date.toString());
 
         db.execSQL(query);
 
@@ -110,7 +123,15 @@ public class CrashReporter {
         // Get the reports and add them to the list to return
         try {
             db = getDB();
-            cursor = db.rawQuery("SELECT id, message, stacktrace, date FROM CrashReports", new String[]{ });
+            cursor = db.rawQuery(
+                    String.format("SELECT %s, %s, %s, %s FROM %s",
+                            col_id,
+                            col_message,
+                            col_stacktrace,
+                            col_date,
+                            tableName),
+                    new String[]{ }
+            );
 
             if (cursor.moveToFirst()) {
                 do {
